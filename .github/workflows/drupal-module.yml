@@ -1,0 +1,77 @@
+name: Drupal Module
+
+on:
+  pull_request:
+    paths:
+      - "**/*.php"
+      - "**/*.yml"
+      - "composer.json"
+      - "tests/**"
+      - ".github/workflows/drupal-module.yml"
+  push:
+    paths:
+      - "**/*.php"
+      - "**/*.yml"
+      - "composer.json"
+      - "tests/**"
+      - ".github/workflows/drupal-module.yml"
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - drupal: "^10"
+            php: "8.2"
+          - drupal: "^11"
+            php: "8.3"
+
+    env:
+      SIMPLETEST_BASE_URL: "http://127.0.0.1"
+      SIMPLETEST_DB: "sqlite://localhost/sites/default/files/db.sqlite"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "${{ matrix.php }}"
+          tools: composer:v2
+          extensions: gd
+
+      - name: Create Drupal project
+        run: composer create-project drupal/recommended-project:${{ matrix.drupal }} drupal --no-interaction --prefer-dist
+
+      - name: Install dependency modules
+        run: |
+          cd drupal
+          composer require drupal/jsonapi_frontend:^1 --no-interaction --prefer-dist -W
+
+      - name: Install module from this repo
+        run: |
+          mkdir -p drupal/web/modules/contrib/jsonapi_frontend_menu
+          rsync -a --delete \
+            --exclude ".git" \
+            --exclude "drupal" \
+            --exclude ".github" \
+            ./ drupal/web/modules/contrib/jsonapi_frontend_menu/
+
+      - name: Install Drupal test dependencies
+        run: |
+          cd drupal
+          composer require --dev drupal/core-dev:${{ matrix.drupal }} --no-interaction --prefer-dist -W
+
+      - name: Prepare test directories
+        run: |
+          mkdir -p drupal/web/sites/default/files
+          mkdir -p drupal/web/sites/simpletest/browser_output
+          chmod -R 777 drupal/web/sites/default/files
+          chmod -R 777 drupal/web/sites/simpletest/browser_output
+
+      - name: Run PHPUnit
+        run: |
+          cd drupal/web
+          ../vendor/bin/phpunit -c core modules/contrib/jsonapi_frontend_menu/tests
+
