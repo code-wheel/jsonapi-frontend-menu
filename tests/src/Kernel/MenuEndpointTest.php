@@ -28,6 +28,7 @@ final class MenuEndpointTest extends KernelTestBase {
     'system',
     'user',
     'file',
+    'link',
     'node',
     'path',
     'path_alias',
@@ -225,4 +226,3 @@ final class MenuEndpointTest extends KernelTestBase {
   }
 
 }
-
