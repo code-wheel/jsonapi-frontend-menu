@@ -20,13 +20,16 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Semgrep
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: p/security-audit
-          generateSarif: "1"
+        run: |
+          docker run --rm -v "$PWD":/src -w /src returntocorp/semgrep:latest \
+            semgrep \
+              --config p/security-audit \
+              --config p/php \
+              --sarif \
+              --output semgrep.sarif \
+              --metrics off
 
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: semgrep.sarif
-
