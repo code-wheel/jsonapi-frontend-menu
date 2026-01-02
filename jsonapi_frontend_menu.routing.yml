@@ -1,0 +1,10 @@
+jsonapi_frontend_menu.menu:
+  path: '/jsonapi/menu/{menu}'
+  defaults:
+    _controller: '\Drupal\jsonapi_frontend_menu\Controller\MenuController::menu'
+  requirements:
+    # Allow anonymous access - menu + route access is checked in code.
+    _access: 'TRUE'
+    _format: 'json'
+  methods: [GET]
+

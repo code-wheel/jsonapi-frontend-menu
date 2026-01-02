@@ -1,0 +1,10 @@
+{
+  "name": "drupal/jsonapi_frontend_menu",
+  "description": "Menu tree endpoint for jsonapi_frontend (active trail + headless routing hints).",
+  "type": "drupal-module",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "drupal/core": "^10.3 || ^11",
+    "drupal/jsonapi_frontend": "^1.0.6"
+  }
+}
