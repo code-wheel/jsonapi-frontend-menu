@@ -27,9 +27,9 @@ final class MenuController extends ControllerBase {
 
   public function __construct(
     private readonly MenuLinkTreeInterface $menuLinkTree,
-    private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly EntityTypeManagerInterface $entityTypeManagerService,
     private readonly PathResolver $resolver,
-    private readonly RequestStack $requestStack,
+    private readonly RequestStack $requestStackService,
   ) {}
 
   public static function create(ContainerInterface $container): self {
@@ -42,7 +42,7 @@ final class MenuController extends ControllerBase {
   }
 
   public function menu(Request $request, string $menu): CacheableJsonResponse {
-    $menu_entity = $this->entityTypeManager->getStorage('menu')->load($menu);
+    $menu_entity = $this->entityTypeManagerService->getStorage('menu')->load($menu);
     if (!$menu_entity) {
       return $this->errorResponse(
         status: 404,
@@ -454,7 +454,7 @@ final class MenuController extends ControllerBase {
     $base_url = $config->get('drupal_base_url');
 
     if (empty($base_url)) {
-      $request = $this->requestStack->getCurrentRequest();
+      $request = $this->requestStackService->getCurrentRequest();
       $base_url = $request ? $request->getSchemeAndHttpHost() : '';
     }
 
