@@ -2,7 +2,20 @@
   "name": "drupal/jsonapi_frontend_menu",
   "description": "Menu tree endpoint for jsonapi_frontend (active trail + headless routing hints).",
   "type": "drupal-module",
+  "keywords": [
+    "Drupal",
+    "JSON:API",
+    "headless",
+    "decoupled",
+    "menu",
+    "navigation"
+  ],
   "license": "GPL-2.0-or-later",
+  "homepage": "https://www.drupal.org/project/jsonapi_frontend_menu",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/jsonapi_frontend_menu",
+    "source": "https://git.drupalcode.org/project/jsonapi_frontend_menu"
+  },
   "require": {
     "drupal/core": "^10.3 || ^11",
     "drupal/jsonapi_frontend": "^1.0.6"
