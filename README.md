@@ -6,6 +6,8 @@
 - Optional active trail from a provided `path`.
 - Per-item `resolve` hints (headless + `drupal_url` / `jsonapi_url` / `data_url`).
 
+Main module: https://www.drupal.org/project/jsonapi_frontend
+
 ## Endpoint
 
 ```
@@ -21,6 +23,8 @@ GET /jsonapi/menu/{menu}?path=/about-us&_format=json
 
 Top-level `data` is an array of menu items. Each item includes a nested `children` tree and an optional `resolve` object that matches the
 shape returned by `/jsonapi/resolve`.
+
+Tip: For maximum cache reuse, call the endpoint without `path` and compute active trail client-side.
 
 ## Install
 
