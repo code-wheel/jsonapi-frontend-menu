@@ -11,6 +11,8 @@ use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\system\Entity\Menu;
 use Drupal\user\Entity\User;
+use Drupal\user\Entity\Role;
+use Drupal\user\RoleInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -58,6 +60,18 @@ final class MenuEndpointTest extends KernelTestBase {
     $this->installEntitySchema('menu_link_content');
     $this->installSchema('node', ['node_access']);
     $this->installConfig(['jsonapi_frontend']);
+
+    // Allow anonymous users to access published content, so menu access checks
+    // treat node links as accessible.
+    $anonymous = Role::load(RoleInterface::ANONYMOUS_ID);
+    if (!$anonymous) {
+      $anonymous = Role::create([
+        'id' => RoleInterface::ANONYMOUS_ID,
+        'label' => 'Anonymous',
+      ]);
+    }
+    $anonymous->grantPermission('access content');
+    $anonymous->save();
 
     $admin = User::create([
       'name' => 'admin',
