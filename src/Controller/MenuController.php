@@ -191,12 +191,14 @@ final class MenuController extends ControllerBase {
         $cacheability->addCacheableDependency($link);
       }
       $url_object = $link->getUrlObject();
+      $external = $url_object->isExternal();
 
       $generated = $url_object->toString(TRUE);
       $cacheability->addCacheableDependency($generated);
       $url = $generated->getGeneratedUrl();
-
-      $external = $url_object->isExternal();
+      if (!$external) {
+        $url = $this->normalizeInternalUrl($url);
+      }
 
       $resolve = NULL;
       if ($include_resolve && !$external) {
@@ -458,7 +460,57 @@ final class MenuController extends ControllerBase {
 
     $base_url = rtrim((string) $base_url, '/');
 
-    return $base_url . $path;
+      return $base_url . $path;
+  }
+
+  /**
+   * Normalizes an internal (non-external) URL string to a safe path+query.
+   *
+   * This is used to avoid passing absolute URLs (scheme/host) into the resolver
+   * and to keep frontend navigation paths consistent.
+   */
+  private function normalizeInternalUrl(string $url): string {
+    $url = trim($url);
+    if ($url === '') {
+      return '';
+    }
+
+    if (strlen($url) > 2048) {
+      return '';
+    }
+
+    // Drop fragments.
+    if (str_contains($url, '#')) {
+      $url = strstr($url, '#', TRUE) ?: '';
+    }
+
+    // Strip scheme/host if a full URL was provided.
+    if (preg_match('#^[a-z][a-z0-9+\\-.]*://#i', $url)) {
+      $parsed = parse_url($url);
+      if (is_array($parsed) && isset($parsed['path'])) {
+        $url = (string) $parsed['path'];
+        if (!empty($parsed['query'])) {
+          $url .= '?' . $parsed['query'];
+        }
+      }
+    }
+
+    if ($url === '') {
+      return '';
+    }
+
+    if ($url[0] !== '/') {
+      $url = '/' . $url;
+    }
+
+    // Normalize the path portion (preserve query string as-is).
+    [$path, $query] = array_pad(explode('?', $url, 2), 2, NULL);
+    $path = preg_replace('#/+#', '/', $path) ?? $path;
+    if ($path !== '/' && str_ends_with($path, '/')) {
+      $path = rtrim($path, '/');
+    }
+
+    return $query !== NULL && $query !== '' ? $path . '?' . $query : $path;
   }
 
 }
