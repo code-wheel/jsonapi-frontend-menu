@@ -109,7 +109,7 @@ final class MenuController extends ControllerBase {
         'url.site',
       ]);
       $this->addLanguageFallbackCacheContext($cacheable, $langcode);
-      $cacheable->applyTo($response);
+      $response->addCacheableDependency($cacheable);
       $this->applySecurityHeaders($response, $cacheable->getCacheMaxAge());
 
       return $response;
@@ -159,7 +159,7 @@ final class MenuController extends ControllerBase {
       'Content-Type' => self::CONTENT_TYPE,
     ]);
 
-    $cacheability->applyTo($response);
+    $response->addCacheableDependency($cacheability);
     $this->applySecurityHeaders($response, $max_age);
 
     return $response;
@@ -367,7 +367,7 @@ final class MenuController extends ControllerBase {
 
     $cacheable = new CacheableMetadata();
     $cacheable->setCacheMaxAge(0);
-    $cacheable->applyTo($response);
+    $response->addCacheableDependency($cacheable);
     $this->applySecurityHeaders($response, 0);
 
     return $response;
