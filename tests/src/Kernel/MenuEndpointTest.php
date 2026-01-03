@@ -90,6 +90,11 @@ final class MenuEndpointTest extends KernelTestBase {
       'label' => 'Main navigation',
     ])->save();
 
+    Menu::create([
+      'id' => 'empty',
+      'label' => 'Empty menu',
+    ])->save();
+
     Node::create([
       'type' => 'page',
       'title' => 'About Us',
@@ -139,6 +144,18 @@ final class MenuEndpointTest extends KernelTestBase {
     ]);
     $external->save();
     $this->ids['external'] = 'menu_link_content:' . $external->uuid();
+
+    $login = MenuLinkContent::create([
+      'title' => 'Login',
+      'menu_name' => 'main',
+      'link' => ['uri' => 'internal:/user/login'],
+    ]);
+    $login->save();
+    $this->ids['login'] = 'menu_link_content:' . $login->uuid();
+
+    $this->config('jsonapi_frontend.settings')
+      ->set('drupal_base_url', 'https://cms.example.com')
+      ->save();
   }
 
   public function testMenuActiveTrailAndResolve(): void {
@@ -185,6 +202,54 @@ final class MenuEndpointTest extends KernelTestBase {
     $this->assertNotNull($external);
     $this->assertTrue($external['external']);
     $this->assertNull($external['resolve']);
+  }
+
+  public function testMenuNotFoundReturns404(): void {
+    $this->container->get('current_user')->setAccount(new AnonymousUserSession());
+
+    $controller = \Drupal\jsonapi_frontend_menu\Controller\MenuController::create($this->container);
+    $request = Request::create('/jsonapi/menu/does-not-exist', 'GET', [
+      '_format' => 'json',
+    ]);
+
+    $response = $controller->menu($request, 'does-not-exist');
+    $this->assertSame(404, $response->getStatusCode());
+  }
+
+  public function testEmptyMenuReturns200WithNoItems(): void {
+    $this->container->get('current_user')->setAccount(new AnonymousUserSession());
+
+    $controller = \Drupal\jsonapi_frontend_menu\Controller\MenuController::create($this->container);
+    $request = Request::create('/jsonapi/menu/empty', 'GET', [
+      '_format' => 'json',
+    ]);
+
+    $response = $controller->menu($request, 'empty');
+    $this->assertSame(200, $response->getStatusCode());
+
+    $payload = json_decode((string) $response->getContent(), TRUE);
+    $this->assertIsArray($payload);
+    $this->assertSame('empty', $payload['meta']['menu']);
+    $this->assertSame([], $payload['data']);
+  }
+
+  public function testUnresolvedInternalLinksFallBackToRouteKind(): void {
+    $this->container->get('current_user')->setAccount(new AnonymousUserSession());
+
+    $controller = \Drupal\jsonapi_frontend_menu\Controller\MenuController::create($this->container);
+    $request = Request::create('/jsonapi/menu/main', 'GET', [
+      '_format' => 'json',
+    ]);
+
+    $response = $controller->menu($request, 'main');
+    $payload = json_decode((string) $response->getContent(), TRUE);
+
+    $login = $this->findItemById($payload['data'], $this->ids['login']);
+    $this->assertNotNull($login);
+
+    $this->assertTrue($login['resolve']['resolved']);
+    $this->assertSame('route', $login['resolve']['kind']);
+    $this->assertStringContainsString('/user/login', (string) $login['resolve']['drupal_url']);
   }
 
   public function testResolveCanBeDisabled(): void {
