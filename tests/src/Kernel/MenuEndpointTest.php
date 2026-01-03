@@ -153,6 +153,22 @@ final class MenuEndpointTest extends KernelTestBase {
     $login->save();
     $this->ids['login'] = 'menu_link_content:' . $login->uuid();
 
+    $query = MenuLinkContent::create([
+      'title' => 'With Query',
+      'menu_name' => 'main',
+      'link' => [
+        'uri' => 'internal:/about-us',
+        'options' => [
+          'query' => [
+            'utm' => '1',
+          ],
+          'fragment' => 'frag',
+        ],
+      ],
+    ]);
+    $query->save();
+    $this->ids['query'] = 'menu_link_content:' . $query->uuid();
+
     $this->config('jsonapi_frontend.settings')
       ->set('drupal_base_url', 'https://cms.example.com')
       ->save();
@@ -270,6 +286,67 @@ final class MenuEndpointTest extends KernelTestBase {
     $about = $this->findItemById($payload['data'], $this->ids['about']);
     $this->assertNotNull($about);
     $this->assertNull($about['resolve']);
+  }
+
+  public function testMenuQueryDepthAndParentOptionsAreHandled(): void {
+    $this->config('jsonapi_frontend.settings')
+      ->set('resolver.cache_max_age', 60)
+      ->set('resolver.langcode_fallback', 'current')
+      ->save();
+
+    $this->container->get('current_user')->setAccount(new AnonymousUserSession());
+
+    $controller = \Drupal\jsonapi_frontend_menu\Controller\MenuController::create($this->container);
+    $request = Request::create('/jsonapi/menu/main', 'GET', [
+      '_format' => 'json',
+      'path' => 'https://www.example.com/about-us/team?utm=1#frag',
+      'min_depth' => '2',
+      'max_depth' => '3',
+      'parent' => $this->ids['about'],
+    ]);
+
+    $response = $controller->menu($request, 'main');
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertStringContainsString('public', (string) $response->headers->get('Cache-Control'));
+
+    $payload = json_decode((string) $response->getContent(), TRUE);
+    $this->assertIsArray($payload);
+    $this->assertSame([$this->ids['about'], $this->ids['team']], $payload['meta']['active_trail']);
+
+    $team = $this->findItemById($payload['data'], $this->ids['team']);
+    $this->assertNotNull($team);
+  }
+
+  public function testAuthenticatedUserDisablesCaching(): void {
+    $this->config('jsonapi_frontend.settings')
+      ->set('resolver.cache_max_age', 60)
+      ->save();
+
+    $controller = \Drupal\jsonapi_frontend_menu\Controller\MenuController::create($this->container);
+    $request = Request::create('/jsonapi/menu/main', 'GET', [
+      '_format' => 'json',
+    ]);
+
+    $response = $controller->menu($request, 'main');
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+  }
+
+  public function testInternalUrlsAreNormalizedForResolve(): void {
+    $this->container->get('current_user')->setAccount(new AnonymousUserSession());
+
+    $controller = \Drupal\jsonapi_frontend_menu\Controller\MenuController::create($this->container);
+    $request = Request::create('/jsonapi/menu/main', 'GET', [
+      '_format' => 'json',
+    ]);
+
+    $response = $controller->menu($request, 'main');
+    $payload = json_decode((string) $response->getContent(), TRUE);
+
+    $query = $this->findItemById($payload['data'], $this->ids['query']);
+    $this->assertNotNull($query);
+    $this->assertSame('/about-us?utm=1', $query['url']);
+    $this->assertTrue($query['resolve']['resolved']);
   }
 
   /**

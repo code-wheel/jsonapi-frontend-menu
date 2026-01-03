@@ -49,7 +49,7 @@ jobs:
       SIMPLETEST_DB: "sqlite://localhost/sites/default/files/db.sqlite"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -88,13 +88,13 @@ jobs:
           chmod -R 777 drupal/web/sites/simpletest/browser_output
 
       - name: Run PHPUnit
-        if: ${{ !matrix.coverage || github.ref != 'refs/heads/master' }}
+        if: ${{ !matrix.coverage }}
         run: |
           cd drupal/web
           ../vendor/bin/phpunit -c core modules/contrib/jsonapi_frontend_menu/tests
 
       - name: Run PHPUnit (coverage)
-        if: ${{ matrix.coverage && github.ref == 'refs/heads/master' }}
+        if: ${{ matrix.coverage }}
         run: |
           cd drupal/web
           ../vendor/bin/phpunit -c core modules/contrib/jsonapi_frontend_menu/tests \
@@ -102,7 +102,7 @@ jobs:
             --coverage-filter modules/contrib/jsonapi_frontend_menu
 
       - name: Upload coverage artifact
-        if: ${{ matrix.coverage && github.ref == 'refs/heads/master' }}
+        if: ${{ matrix.coverage }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage-jsonapi_frontend_menu
@@ -110,7 +110,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload coverage to Codecov
-        if: ${{ matrix.coverage && github.ref == 'refs/heads/master' }}
+        if: ${{ matrix.coverage }}
         continue-on-error: true
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de
         with:
