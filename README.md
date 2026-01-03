@@ -34,3 +34,9 @@ Tip: For maximum cache reuse, call the endpoint without `path` and compute activ
 composer require drupal/jsonapi_frontend_menu
 drush en jsonapi_frontend_menu
 ```
+
+## Security & caching
+
+- This endpoint is under `/jsonapi/` so it can share the same perimeter rules you apply to JSON:API.
+- Anonymous responses are cacheable; authenticated responses return `Cache-Control: no-store`.
+- For rate limiting / hardening guidance, see `jsonapi_frontend`’s `MIGRATION.md` (Security hardening section).
