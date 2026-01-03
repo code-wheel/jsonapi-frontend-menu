@@ -20,6 +20,9 @@ jobs:
   phpunit:
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental }}
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -85,13 +88,13 @@ jobs:
           chmod -R 777 drupal/web/sites/simpletest/browser_output
 
       - name: Run PHPUnit
-        if: ${{ !matrix.coverage }}
+        if: ${{ !matrix.coverage || github.ref != 'refs/heads/master' }}
         run: |
           cd drupal/web
           ../vendor/bin/phpunit -c core modules/contrib/jsonapi_frontend_menu/tests
 
       - name: Run PHPUnit (coverage)
-        if: ${{ matrix.coverage }}
+        if: ${{ matrix.coverage && github.ref == 'refs/heads/master' }}
         run: |
           cd drupal/web
           ../vendor/bin/phpunit -c core modules/contrib/jsonapi_frontend_menu/tests \
@@ -99,7 +102,7 @@ jobs:
             --coverage-filter modules/contrib/jsonapi_frontend_menu
 
       - name: Upload coverage artifact
-        if: ${{ matrix.coverage }}
+        if: ${{ matrix.coverage && github.ref == 'refs/heads/master' }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage-jsonapi_frontend_menu
@@ -107,10 +110,11 @@ jobs:
           if-no-files-found: error
 
       - name: Upload coverage to Codecov
-        if: ${{ matrix.coverage }}
+        if: ${{ matrix.coverage && github.ref == 'refs/heads/master' }}
         continue-on-error: true
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de
         with:
+          use_oidc: true
           files: coverage.xml
           flags: phpunit,drupal
           fail_ci_if_error: false
