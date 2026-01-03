@@ -1,5 +1,7 @@
 # JSON:API Frontend Menu
 
+[![Drupal Module](https://github.com/code-wheel/jsonapi-frontend-menu/actions/workflows/drupal-module.yml/badge.svg?branch=master)](https://github.com/code-wheel/jsonapi-frontend-menu/actions/workflows/drupal-module.yml?query=branch%3Amaster) [![Semgrep](https://github.com/code-wheel/jsonapi-frontend-menu/actions/workflows/semgrep.yml/badge.svg?branch=master)](https://github.com/code-wheel/jsonapi-frontend-menu/actions/workflows/semgrep.yml?query=branch%3Amaster) [![codecov](https://codecov.io/gh/code-wheel/jsonapi-frontend-menu/branch/master/graph/badge.svg)](https://codecov.io/gh/code-wheel/jsonapi-frontend-menu) [![Security Policy](https://img.shields.io/badge/security-policy-blue.svg)](SECURITY.md)
+
 `jsonapi_frontend_menu` is an optional add-on for `jsonapi_frontend` that exposes a ready-to-render menu tree with:
 
 - Role-aware access filtering (uses Drupal menu access checks).
