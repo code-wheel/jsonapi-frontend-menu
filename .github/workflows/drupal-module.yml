@@ -19,21 +19,30 @@ on:
 jobs:
   phpunit:
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - drupal: "^10"
             php: "8.2"
+            experimental: false
           - drupal: "^11"
             php: "8.3"
+            experimental: false
+          - drupal: "^11"
+            php: "8.4"
+            experimental: false
+          - drupal: "^11"
+            php: "8.5"
+            experimental: true
 
     env:
       SIMPLETEST_BASE_URL: "http://127.0.0.1"
       SIMPLETEST_DB: "sqlite://localhost/sites/default/files/db.sqlite"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -74,4 +83,3 @@ jobs:
         run: |
           cd drupal/web
           ../vendor/bin/phpunit -c core modules/contrib/jsonapi_frontend_menu/tests
-
