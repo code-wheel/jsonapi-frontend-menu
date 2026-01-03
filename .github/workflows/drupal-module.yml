@@ -27,15 +27,19 @@ jobs:
           - drupal: "^10"
             php: "8.2"
             experimental: false
+            coverage: false
           - drupal: "^11"
             php: "8.3"
             experimental: false
+            coverage: true
           - drupal: "^11"
             php: "8.4"
             experimental: false
+            coverage: false
           - drupal: "^11"
             php: "8.5"
             experimental: true
+            coverage: false
 
     env:
       SIMPLETEST_BASE_URL: "http://127.0.0.1"
@@ -49,6 +53,7 @@ jobs:
           php-version: "${{ matrix.php }}"
           tools: composer:v2
           extensions: gd
+          coverage: pcov
 
       - name: Create Drupal project
         run: composer create-project drupal/recommended-project:${{ matrix.drupal }} drupal --no-interaction --prefer-dist
@@ -80,6 +85,33 @@ jobs:
           chmod -R 777 drupal/web/sites/simpletest/browser_output
 
       - name: Run PHPUnit
+        if: ${{ !matrix.coverage }}
         run: |
           cd drupal/web
           ../vendor/bin/phpunit -c core modules/contrib/jsonapi_frontend_menu/tests
+
+      - name: Run PHPUnit (coverage)
+        if: ${{ matrix.coverage }}
+        run: |
+          cd drupal/web
+          ../vendor/bin/phpunit -c core modules/contrib/jsonapi_frontend_menu/tests \
+            --coverage-clover "$GITHUB_WORKSPACE/coverage.xml" \
+            --coverage-filter modules/contrib/jsonapi_frontend_menu
+
+      - name: Upload coverage artifact
+        if: ${{ matrix.coverage }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-jsonapi_frontend_menu
+          path: coverage.xml
+          if-no-files-found: error
+
+      - name: Upload coverage to Codecov
+        if: ${{ matrix.coverage }}
+        continue-on-error: true
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de
+        with:
+          files: coverage.xml
+          flags: phpunit,drupal
+          fail_ci_if_error: false
+          verbose: true
