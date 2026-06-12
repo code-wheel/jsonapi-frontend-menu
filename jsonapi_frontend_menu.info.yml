@@ -2,7 +2,7 @@ name: 'JSON:API Frontend Menu'
 type: module
 description: 'Adds a menu tree endpoint with active trail and jsonapi_frontend resolve hints.'
 package: Web services
-core_version_requirement: ^10 || ^11
+core_version_requirement: ^10 || ^11 || ^12
 dependencies:
   - jsonapi_frontend:jsonapi_frontend
 

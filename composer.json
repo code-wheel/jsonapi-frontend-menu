@@ -23,7 +23,7 @@
     }
   ],
   "require": {
-    "drupal/core": "^10.3 || ^11",
+    "drupal/core": "^10.3 || ^11 || ^12",
     "drupal/jsonapi_frontend": "^1.0.6"
   }
 }
