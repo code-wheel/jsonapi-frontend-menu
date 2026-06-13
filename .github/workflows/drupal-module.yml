@@ -59,7 +59,9 @@ jobs:
           coverage: pcov
 
       - name: Create Drupal project
-        run: composer create-project drupal/recommended-project:${{ matrix.drupal }} drupal --no-interaction --prefer-dist
+        run: |
+          composer config --global policy.advisories.block false
+          composer create-project drupal/recommended-project:${{ matrix.drupal }} drupal --no-interaction --prefer-dist
 
       - name: Install dependency modules
         run: |
